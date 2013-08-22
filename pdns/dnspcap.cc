@@ -22,6 +22,8 @@ PcapPacketReader::PcapPacketReader(const string& fname) : d_fname(fname)
     d_skipMediaHeader=sizeof(struct ether_header);
   } else if(d_pfh.linktype==113) {
     d_skipMediaHeader=16;
+  } else if(d_pfh.linktype==101) {
+    d_skipMediaHeader=0;
   }
   else throw runtime_error((format("Unsupported link type %d") % d_pfh.linktype).str());
   
@@ -77,6 +79,8 @@ try
       contentCode=ntohs(d_ether->ether_type);
     else if(d_pfh.linktype==113)
       contentCode=ntohs(d_lcc->lcc_protocol);
+    else if(d_pfh.linktype==101)
+      contentCode=(d_ip->ip_v==6 ? 0x86dd : 0x0800);
 
     if(contentCode==0x0800 && d_ip->ip_p==17) { // udp
       d_udp=reinterpret_cast<const struct udphdr*>(d_buffer + d_skipMediaHeader + 4 * d_ip->ip_hl);
